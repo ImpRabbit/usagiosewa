@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/>
+<title>うさぎのおせわ🐰</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{--bg:#0f1115;--panel:#171a21;--line:#272b33;--fg:#e8eaed;--muted:#a3a7ad;--accent:#60a5fa;--accent2:#a78bfa;--accent3:#34d399;--safe-t:env(safe-area-inset-top);--safe-b:env(safe-area-inset-bottom);--safe-l:env(safe-area-inset-left);--safe-r:env(safe-area-inset-right)}
+  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP",sans-serif;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+  body{padding:calc(8px + var(--safe-t)) calc(8px + var(--safe-r)) calc(8px + var(--safe-b)) calc(8px + var(--safe-l))}
+  .wrap{min-height:100%;display:grid;place-items:center}
+  .card{width:min(860px,96vw);background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 16px 18px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+  h1{font-size:clamp(20px,5.2vw,26px);margin:0}.sub{color:var(--muted);font-size:13px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .board{margin-top:10px;border:2px dashed #2a2f38;border-radius:14px;height:clamp(360px,60vh,620px);display:grid;grid-template-rows:1fr auto;overflow:hidden;position:relative;touch-action:none}
+  .scene{position:relative;display:grid;place-items:center;overflow:hidden}.ground{position:absolute;inset:auto 0 0 0;height:35%;background:#0e141a;border-top:1px solid #243042}
+  .sky{position:absolute;inset:0 0 35% 0;background:linear-gradient(#0b1220,#0f172a)}.sun{position:absolute;top:18px;right:18px;font-size:clamp(22px,6vw,32px);opacity:.9}
+  .stars{position:absolute;inset:0 0 35% 0;pointer-events:none;opacity:.4}.star{position:absolute;font-size:12px}
+
+  /* ← Y補正はJSがやるので0。固定の-6pxは削除 */
+  .bun{
+    position:absolute;
+    left:50%; top:65%;
+    transform:translate(-50%, 0);
+    display:grid; place-items:center; gap:4px; z-index:2;
+  }
+  .bubble{font-size:clamp(16px,4.6vw,22px);background:#111827;border:1px solid #263245;padding:.35em .6em;border-radius:12px;color:#c7d2fe;box-shadow:0 8px 20px rgba(0,0,0,.25)}
+  .shake{animation:shake .35s ease-in-out both}@keyframes shake{0%,100%{transform:translate(0,0)}30%{transform:translate(-3px,0)}60%{transform:translate(3px,0)}}
+
+  .controls{
+    display:flex; gap:8px; padding:10px;
+    background:#0e1218; border-top:1px solid var(--line);
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+  }
+  .controls::-webkit-scrollbar{display:none}
+  button{
+    border:0;border-radius:12px;padding:12px 8px;
+    font-size:clamp(14px,4.2vw,16px);
+    background:#1f2530;color:var(--fg);
+    -webkit-tap-highlight-color:transparent;
+    flex:0 0 auto; scroll-snap-align:start;
+  }
+  button.primary{background:var(--accent);color:#061222;font-weight:700}
+  button.alt{background:var(--accent2);color:#0d0b16;font-weight:700}
+  button.good{background:var(--accent3);color:#04130f;font-weight:700}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .pill{border:1px solid var(--line);border-radius:12px;padding:8px;background:#0f1319;color:#var(--muted);font-size:14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .bar{flex:1;height:10px;background:#0c1117;border:1px solid #1d2430;border-radius:999px;overflow:hidden}.fill{height:100%;width:50%;background:linear-gradient(90deg,#1dd1a1,#10b981)}
+  .time{font-variant-numeric:tabular-nums}.footer{margin-top:10px;color:var(--muted);font-size:12px;display:flex;gap:8px;flex-wrap:wrap}
+  .toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-b));transform:translateX(-50%);background:#0b1220;border:1px solid #243042;color:#dbeafe;padding:10px 14px;border-radius:999px;font-size:14px;box-shadow:0 8px 20px rgba(0,0,0,.4);opacity:0;pointer-events:none}
+  .toast.show{animation:toast 1.6s ease-out both}@keyframes toast{0%{opacity:0;transform:translate(-50%,10px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
+  .acc{position:absolute;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+  .acc.head{top:-12%;font-size:clamp(24px,6vw,34px)}.acc.neck{bottom:-2%;font-size:clamp(22px,5.6vw,30px)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal.show{display:flex}.modal .box{width:min(720px,96vw);background:#0f1319;border:1px solid #263245;border-radius:14px;padding:16px;position:relative}
+  .close{position:absolute;right:12px;top:10px;background:#1e293b;color:#cbd5e1;border-radius:10px}
+  .mini-board{margin-top:8px;border:2px dashed #334155;border-radius:12px;height:46vh;display:grid;place-items:center;overflow:hidden;touch-action:manipulation;position:relative}
+  .mini-msg{font-size:clamp(18px,5.2vw,28px);text-align:center}.flash{position:absolute;inset:0;background:white;opacity:0;pointer-events:none}
+  .evt{position:absolute;left:10px;top:10px;background:#1f2937;color:#93c5fd;border:1px solid #334155;border-radius:12px;padding:6px 10px;font-size:13px;z-index:5}
+  .hint{outline:2px solid #f59e0b;outline-offset:2px}.petTrail{position:absolute;font-size:clamp(20px,6vw,34px);opacity:.9;animation:trail .7s ease-out both}
+  @keyframes trail{0%{transform:scale(.6) translateY(10px);opacity:0}60%{transform:scale(1.1);opacity:.95}100%{transform:scale(1) translateY(-14px);opacity:0}}
+  .a2hs{position:fixed;left:50%;bottom:calc(74px + var(--safe-b));transform:translateX(-50%);background:#111827;border:1px solid #334155;color:#e5e7eb;padding:10px 12px;border-radius:12px;font-size:13px;display:none;z-index:60;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+  .a2hs.show{display:block}
+
+  /* スプライト準備完了時は絵文字を消す */
+  .sprite-ready #emoji { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrapper">
+  <div class="card" role="main">
+    <header class="row">
+      <div>
+        <h1>うさぎのおせわ 🐰</h1>
+        <div class="sub">空腹/水分/清潔/ごきげん/スタミナを保って、なが〜く仲良し！</div>
+      </div>
+      <div class="row">
+        <button id="statsBtn" class="good">📊 統計</button>
+        <button id="backupBtn" class="alt">💾 エクスポート</button>
+        <label for="restoreInput" class="alt" style="padding:12px;border-radius:12px;cursor:pointer">📂 インポート</label>
+        <input id="restoreInput" type="file" accept="application/json" style="display:none">
+        <button id="soundBtn">🔇 サウンド</button>
+        <button id="reset">初期化</button>
+      </div>
+    </header>
+
+    <div class="board" id="board" aria-label="プレイ領域">
+      <div class="evt" id="evtBox" style="display:none"></div>
+      <div class="scene" id="scene">
+        <div class="sky"></div><div class="sun" id="sun">🌤️</div><div class="stars" id="stars"></div>
+
+        <div class="bun" id="bun">
+          <div class="emoji" id="emoji">🐰</div>
+          <canvas id="bunCanvas" width="128" height="128"
+                  style="width:clamp(68px,18vw,128px);height:clamp(68px,18vw,128px)"></canvas>
+          <div class="acc head" id="acc-head" style="display:none"></div>
+          <div class="acc neck" id="acc-neck" style="display:none"></div>
+          <div class="bubble" id="speech">はじめまして！</div>
+        </div>
+
+        <div class="ground"></div>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="feed">🥕 ごはん</button>
+        <button id="water">🚰 水やり</button>
+        <button id="clean">🧹 おそうじ</button>
+        <button id="play">🎾 あそぶ</button>
+        <button class="alt" id="miniBtn1">🎯 反射</button>
+        <button class="alt" id="miniBtn2">🛩️ 避け</button>
+        <button id="sleep">🛏️ ねる</button>
+        <button id="notifyBtn">🔔 リマインド</button>
+      </div>
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="stats" aria-label="ステータス">
+      <div class="pill"><span>空腹</span><div class="bar"><div class="fill" id="bar-hunger"></div></div><span id="val-hunger">100</span></div>
+      <div class="pill"><span>水分</span><div class="bar"><div class="fill" id="bar-water"></div></div><span id="val-water">100</span></div>
+      <div class="pill"><span>清潔</span><div class="bar"><div class="fill" id="bar-clean"></div></div><span id="val-clean">100</span></div>
+      <div class="pill"><span>ごきげん</span><div class="bar"><div class="fill" id="bar-happy"></div></div><span id="val-happy">100</span></div>
+      <div class="pill"><span>スタミナ</span><div class="bar"><div class="fill" id="bar-energy"></div></div><span id="val-energy">100</span></div>
+      <div class="pill"><span>⏱️ 経過</span><span class="time" id="timer">00:00</span></div>
+      <div class="pill"><span>🎖️ 解放</span><span id="unlockInfo">—</span></div>
+    </div>
+
+    <div class="footer">
+      <span>📦 自動保存（localStorage）</span>
+      <span>📱 iPhone最適 / スワイプで撫でる</span>
+      <span>⬇️ ホーム追加（PWA）／🔔は起動時通知</span>
+      <span>🎨 Assets by Givty</span>
+    </div>
+  </div>
+</div>
+
+<!-- モーダル等は省略なし：元コードのまま -->
+
+<div class="modal" id="miniModal1" aria-hidden="true">
+  <div class="box">
+    <button class="close" id="miniClose1">✕</button>
+    <h2 style="margin:0 0 6px;font-size:18px">反射タップ🎯</h2>
+    <div class="sub">「待って…」→「いまだ！」でタップ。速いほど<b>ごきげん回復</b>！</div>
+    <div class="mini-board" id="miniBoard1"><div class="mini-msg" id="miniMsg1">スタートで開始！</div></div>
+    <div class="row" style="margin-top:10px"><button class="primary" id="miniStart1">スタート ▶</button><div class="sub" id="miniStat1">直近: — ms / ベスト: — ms</div></div>
+  </div>
+</div>
+
+<div class="modal" id="miniModal2" aria-hidden="true">
+  <div class="box">
+    <button class="close" id="miniClose2">✕</button>
+    <h2 style="margin:0 0 6px;font-size:18px">避けゲー🛩️</h2>
+    <div class="sub">左右スワイプで操作。<b>スコアに応じて回復</b>！</div>
+    <div class="mini-board" id="miniBoard2">
+      <canvas id="avoidCanvas" style="width:100%;height:100%"></canvas>
+      <div class="mini-msg" id="miniMsg2" style="position:absolute">スタートで開始！</div>
+    </div>
+    <div class="row" style="margin-top:10px"><button class="primary" id="miniStart2">スタート ▶</button><div class="sub" id="miniStat2">スコア: — / ベスト: —</div></div>
+  </div>
+</div>
+
+<div class="modal" id="statsModal" aria-hidden="true">
+  <div class="box">
+    <button class="close" id="statsClose">✕</button>
+    <h2 style="margin:0 0 6px;font-size:18px">📊 日課・統計</h2>
+    <div class="row" style="gap:10px;flex-wrap:wrap">
+      <div class="pill"><span>今日の撫で</span><b id="statPet">0</b></div>
+      <div class="pill"><span>今日の給水</span><b id="statWater">0</b></div>
+      <div class="pill"><span>今日のごはん</span><b id="statFeed">0</b></div>
+      <div class="pill"><span>今日のおそうじ</span><b id="statClean">0</b></div>
+      <div class="pill"><span>今日のあそび</span><b id="statPlay">0</b></div>
+      <div class="pill"><span>連続生存日数</span><b id="statStreak">1</b></div>
+    </div>
+    <div class="sub" style="margin-top:8px">※日付が変わると今日カウントをリセットし、前日に行動があればストリーク+1。</div>
+  </div>
+</div>
+
+<div class="a2hs" id="a2hs">Safariの共有 → <b>ホーム画面に追加</b> でアプリ化📲</div>
+<div class="toast" id="toast">保存したよ！</div>
+
+<script>
+/* ===== iPhone用スクロール抑止 ===== */
+const wrapper=document.getElementById('wrapper'); let _y=0;
+wrapper.addEventListener('touchstart',e=>{_y=e.touches[0].clientY;},{passive:true});
+wrapper.addEventListener('touchmove', e => {
+  if (e.target.closest('.controls, .modal, .mini-board')) return;
+  if (Math.abs(e.touches[0].clientY - _y) > 4) e.preventDefault();
+}, { passive:false });
+
+/* ===== util / state ===== */
+const $=s=>document.querySelector(s), rand=(a,b)=>Math.random()*(b-a)+a, clamp01=v=>Math.max(0,Math.min(100,v));
+const todayKey=()=> new Date().toLocaleDateString('sv-SE');
+const storeKey='bun_save_sprite_names_v1', save=o=>localStorage.setItem(storeKey,JSON.stringify(o));
+const load=()=>{try{return JSON.parse(localStorage.getItem(storeKey))}catch{return null}};
+const state={hunger:100,water:100,clean:100,happy:100,energy:100,sleeping:false,seconds:0,lastTick:Date.now(),bornAt:Date.now(),event:null,nextEventAt:Date.now()+45000,
+  unlocked:{ribbon:false,hat:false,bowtie:false,shades:false},outfitList:['none','ribbon','hat','bowtie','shades'],outfitIndex:0,miniBest1:null,miniBest2:null,soundOn:false,
+  today:todayKey(),countsToday:{pet:0,water:0,feed:0,clean:0,play:0},actedToday:false,streakDays:1,lastNotifyAt:0};
+const saved=load(); if(saved){Object.assign(state,saved); const off=Math.min(3*3600,Math.floor((Date.now()-saved.lastTick)/1000)); applyDecay(off); dailyRolloverIfNeeded();}
+
+/* ===== DOM ===== */
+const bars={hunger:$('#bar-hunger'),water:$('#bar-water'),clean:$('#bar-clean'),happy:$('#bar-happy'),energy:$('#bar-energy')};
+const vals={hunger:$('#val-hunger'),water:$('#val-water'),clean:$('#val-clean'),happy:$('#val-happy'),energy:$('#val-energy')};
+const emoji=$('#emoji'), speech=$('#speech'), timerEl=$('#timer'), bun=$('#bun'), stars=$('#stars'), sun=$('#sun'), evtBox=$('#evtBox'), flash=$('#flash');
+const accHead=$('#acc-head'), accNeck=$('#acc-neck'), unlockInfo=$('#unlockInfo'), soundBtn=$('#soundBtn');
+
+/* 背景の星 */
+for(let i=0;i<30;i++){const s=document.createElement('div');s.className='star';s.textContent='✦';s.style.left=rand(2,98)+'%';s.style.top=rand(4,60)+'%';s.style.opacity=rand(.2,.8);stars.appendChild(s);}
+
+/* ===== Audio ===== */
+const audio={ctx:null,ensure(){try{if(!this.ctx)this.ctx=new (window.AudioContext||window.webkitAudioContext)(); if(this.ctx.state==='suspended')this.ctx.resume();}catch(e){}},
+  beep(f=880,d=0.12){if(!state.soundOn)return; this.ensure(); if(!this.ctx)return;const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type='square';o.frequency.value=f;g.gain.setValueAtTime(0.001,t);g.gain.exponentialRampToValueAtTime(0.2,t+0.01);g.gain.exponentialRampToValueAtTime(0.001,t+d);
+    o.connect(g).connect(this.ctx.destination);o.start(t);o.stop(t+d);} };
+function updateSoundBtn(){soundBtn.textContent= state.soundOn?'🔊 サウンド':'🔇 サウンド';}
+soundBtn.addEventListener('click',()=>{state.soundOn=!state.soundOn;updateSoundBtn();saveNow(true);audio.ensure();audio.beep(state.soundOn?1200:300,0.08);});updateSoundBtn();
+
+/* ===== Sprite: 横長ストリップ ===== */
+class StripSprite{
+  constructor(src,{fps=10,loop=true,cell=null}={}){this.img=new Image();this.ready=false;this.fps=fps;this.loop=loop;this.cell=cell;
+    this.img.onload=()=>{const W=this.img.naturalWidth,H=this.img.naturalHeight;this.cell=this.cell||H;this.total=Math.max(1,Math.floor(W/this.cell));this.ready=true;};
+    this.img.src=src;}
+}
+class Animator{
+  constructor(canvas){this.cv=canvas;this.c=canvas.getContext('2d');const dpr=Math.max(1,window.devicePixelRatio||1);
+    const w=canvas.clientWidth||canvas.width,h=canvas.clientHeight||canvas.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);this.scale=dpr;
+    this.anim=null;this.idx=0;this.acc=0;this.playing=false;this.flipX=1;}
+  play(s){this.anim=s;this.idx=0;this.acc=0;this.playing=true;}
+  step(dt){this.draw();if(!this.playing||!this.anim?.ready)return;const spf=1/this.anim.fps;this.acc+=dt;
+    while(this.acc>=spf){this.acc-=spf;this.idx++;if(this.idx>=this.anim.total){if(this.anim.loop)this.idx=0;else{this.idx=this.anim.total-1;this.playing=false;}}}}
+  draw(){const a=this.anim,c=this.c,cv=this.cv;c.clearRect(0,0,cv.width,cv.height);if(!a?.ready)return;
+    const f=this.idx%a.total,sx=f*a.cell,sy=0,sw=a.cell,sh=a.cell;
+    const scale=1.8,dw=Math.round(sw*scale*this.scale),dh=Math.round(sh*scale*this.scale);
+    const cx=cv.width/2,cy=cv.height/2;c.save();c.imageSmoothingEnabled=false;c.translate(cx,cy);c.scale(this.flipX,1);
+    c.drawImage(a.img,sx,sy,sw,sh,-dw/2,-dh/2,dw,dh);c.restore();}
+}
+const bunCanvas=document.getElementById('bunCanvas'); const animator=new Animator(bunCanvas);
+
+/* スプライト紐付け（ファイル名は実ファイルに合わせてね） */
+const SPR_IDLE=new StripSprite('assets/spritesheet idle.png',  {fps:6,  loop:true});
+const SPR_RUN =new StripSprite('assets/spritesheet run.png',   {fps:14, loop:true});
+const SPR_DASH=new StripSprite('assets/spritesheet dash.png',  {fps:18, loop:false});
+const SPR_HURT=new StripSprite('assets/spritesheet hurt.png',  {fps:10, loop:false});
+const SPR_JUMP=new StripSprite('assets/spritesheet jump.png',  {fps:12, loop:false});
+const SPR_DEAD=new StripSprite('assets/spritesheet death.png', {fps:10, loop:false});
+
+/* ==== アニメ状態管理（競合排除） ==== */
+let currentAnim = null;
+let animLockUntil = 0; // 一時アニメ優先時間（ms基準はperformance.now）
+function setAnim(anim) {
+  if (performance.now() < animLockUntil) return;
+  if (!anim?.ready) return;
+  if (currentAnim === anim) return;
+  currentAnim = anim;
+  animator.play(anim);
+}
+function pulseLock(anim, ms = 300, back = SPR_IDLE) {
+  animLockUntil = performance.now() + ms;
+  animator.play(anim);
+  setTimeout(() => {
+    animLockUntil = 0;
+    setAnim(back);
+  }, ms);
+}
+
+/* Idleが読めたら自動再生＆絵文字OFF（安全版） */
+function startIdleOnce(){
+  setAnim(SPR_IDLE); // ← animator.play ではなく setAnim
+  document.documentElement.classList.add('sprite-ready');
+}
+if (SPR_IDLE.ready) startIdleOnce();
+else SPR_IDLE.img.addEventListener('load', startIdleOnce, { once:true });
+
+/* ==== 待機歩行（左右うろうろ） ==== */
+const scene=document.getElementById('scene');
+const bunEl=document.getElementById('bun');
+let walk={ x:0,y:0,dir:(Math.random()<0.5?-1:1),speed:26,pauseUntil:0,moving:false };
+
+function groundTopPx() {
+  const sceneRect = scene.getBoundingClientRect();              // ← sceneを基準に
+  const groundRect = document.querySelector('.ground').getBoundingClientRect();
+  return groundRect.top - sceneRect.top;                        // scene基準での地面の上端
+}
+
+function initWalk() {
+  const sceneRect = scene.getBoundingClientRect();
+  const bunnyH = bunCanvas.clientHeight || bunEl.offsetHeight || 96;
+  walk.x = sceneRect.width * 0.5;
+  walk.y = groundTopPx() - bunnyH + 2;  // ここでscene基準の座標を使用
+  applyBunPos();
+}
+
+function applyBunPos() {
+  bunEl.style.left = walk.x + 'px';
+  bunEl.style.top  = walk.y + 'px';
+}
+
+function applyBunPos() {
+  bunEl.style.left = walk.x + 'px';
+  bunEl.style.top  = walk.y + 'px';
+}
+function maybePause(){
+  if(performance.now()<walk.pauseUntil)return;
+  if(Math.random()<0.003){ walk.pauseUntil=performance.now()+600+Math.random()*900; }
+}
+function maybeTurn(bounds){
+  if(walk.x<bounds.minX+8) walk.dir=1;
+  if(walk.x>bounds.maxX-8) walk.dir=-1;
+  if(Math.random()<0.002) walk.dir*=-1;
+}
+
+function stepWalk(dt){
+  // ミニゲーム中や睡眠中は停止してIdle
+  if (state.sleeping || $('#miniModal1').classList.contains('show') || $('#miniModal2').classList.contains('show')) {
+    walk.moving = false;
+    animator.flipX = 1;
+    setAnim(SPR_IDLE);
+    return;
+  }
+
+  const r = scene.getBoundingClientRect();
+  const bounds = { minX: r.width * 0.12, maxX: r.width * 0.88 };
+
+  maybePause();
+  if (performance.now() < walk.pauseUntil) {
+    walk.moving = false;
+    animator.flipX = 1;
+    setAnim(SPR_IDLE);  // 停止中はIdle
+    return;
+  }
+
+  maybeTurn(bounds);
+
+  // 右向きのときは反転（左向きがデフォ）
+  animator.flipX = (walk.dir === 1 ? -1 : 1);
+
+  // 位置を更新
+  const boost = (state.energy > 70 ? 1.15 : 1.0);
+  const v = walk.speed * boost;
+  walk.x += walk.dir * v * dt;
+  walk.x = Math.max(bounds.minX, Math.min(bounds.maxX, walk.x));
+  applyBunPos();
+
+  // 歩行中は必ず RUN（再生連打を避けるため setAnim）
+  walk.moving = true;
+  setAnim(SPR_RUN);
+}
+
+let _t=performance.now(); (function spriteLoop(){
+  const n=performance.now(); const dt=(n-_t)/1000; _t=n;
+  animator.step(dt);
+  stepWalk(dt);
+  requestAnimationFrame(spriteLoop);
+})();
+
+/* ===== Render & Game Logic ===== */
+function setBar(name,val){const p=clamp01(val); bars[name].style.width=p+'%'; vals[name].textContent=Math.round(p);
+  const fill=bars[name]; fill.style.background=p>=70?'linear-gradient(90deg,#34d399,#10b981)':(p>=35?'linear-gradient(90deg,#f59e0b,#fbbf24)':'linear-gradient(90deg,#ef4444,#f43f5e)');}
+function renderAll(){
+  ['hunger','water','clean','happy','energy'].forEach(k=>setBar(k,state[k]));
+  timerEl.textContent=new Date(state.seconds*1000).toISOString().substring(14,19);
+  const t=1-(state.energy/100); document.querySelector('.sky').style.filter=`brightness(${1 - t*0.45})`; stars.style.opacity=0.2+t*0.6; sun.textContent=t>0.6?'🌙':(t>0.3?'🌤️':'☀️');
+  if(state.event && Date.now()<state.event.expiresAt){evtBox.style.display=''; evtBox.textContent='📣 要求: '+state.event.text+'（あと '+Math.ceil((state.event.expiresAt-Date.now())/1000)+' 秒）';}
+  else evtBox.style.display='none';
+  const days=Math.max(1,Math.floor((Date.now()-state.bornAt)/86400000)+1); unlocksByDays(days); renderOutfit(); const U=Object.entries(state.unlocked).filter(([k,v])=>v).map(([k])=>labelOf(k));
+  unlockInfo.textContent=`日数:${days} / 解放: `+(U.length?U.join('、'):'—');
+}
+function labelOf(k){return k==='ribbon'?'🎀':k==='hat'?'🎩':k==='bowtie'?'🎀(蝶)':k==='shades'?'🕶':'?'}
+function renderOutfit(){}
+function applyDecay(s){state.hunger-=0.010*s;state.water-=0.012*s;state.clean-=0.006*s;state.happy-=0.004*s;
+  const stress=(state.hunger<30)+(state.water<30)+(state.clean<30)+(state.energy<30); state.happy-=0.0025*stress*s;
+  if(state.sleeping){state.energy+=0.030*s; state.hunger-=0.006*s; state.water-=0.008*s;} else {state.energy-=0.010*s;}
+  ['hunger','water','clean','happy','energy'].forEach(k=>state[k]=clamp01(state[k]));}
+function speak(t){speech.textContent=t; speech.classList.remove('shake'); void speech.offsetWidth; speech.classList.add('shake');}
+function toastMsg(t){const el=$('#toast'); el.textContent=t; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');}
+function bump(){bun.style.transition='transform .12s'; bun.style.transform='translateY(-8px)'; setTimeout(()=>bun.style.transform='translateY(0)',120);}
+function flashWhite(){const f=$('#flash'); f.style.transition='none'; f.style.opacity='1'; requestAnimationFrame(()=>{f.style.transition='opacity .25s'; f.style.opacity='0';});}
+function awardEventIf(type){if(state.event && state.event.type===type && Date.now()<state.event.expiresAt){state.happy=clamp01(state.happy+18);speak('要求に応えたよ！ボーナス✨');state.event=null;state.nextEventAt=Date.now()+70000;}}
+function markActed(k){state.actedToday=true; if(k && state.countsToday[k]!=null) state.countsToday[k]+=1; updateStatsModal();}
+function canAct(){if(state.sleeping){speak('すやすや…（起きてからお願いね）');return false;} return true;}
+function dailyRolloverIfNeeded(){const now=todayKey(); if(state.today!==now){state.streakDays=state.actedToday?(state.streakDays+1):1; state.today=now; state.countsToday={pet:0,water:0,feed:0,clean:0,play:0}; state.actedToday=false; saveNow(true);}}
+function unlocksByDays(d){if(d>=1)state.unlocked.ribbon=true; if(d>=3)state.unlocked.hat=true; if(d>=5)state.unlocked.bowtie=true; if(d>=7)state.unlocked.shades=true;}
+function saveNow(silent=false){save({...state,lastTick:Date.now()}); if(!silent) toastMsg('セーブしたよ');}
+
+/* 操作：瞬間演出は pulseLock を使用（終了後は自動でRUNへ） */
+$('#feed').addEventListener('click',()=>{if(!canAct())return; if(state.hunger>=96){speak('おなかいっぱい〜！');bump();return;}
+  state.hunger=clamp01(state.hunger+22); state.happy=clamp01(state.happy+6); state.clean=clamp01(state.clean-4);
+  speak('もぐもぐ…🥕'); bump(); pulseLock(SPR_DASH,250,SPR_RUN); awardEventIf('FEED'); markActed('feed'); saveNow(); renderAll();});
+$('#water').addEventListener('click',()=>{if(!canAct())return; state.water=clamp01(state.water+28); state.happy=clamp01(state.happy+6);
+  speak('ごくごく…🚰'); bump(); pulseLock(SPR_DASH,250,SPR_RUN); awardEventIf('WATER'); markActed('water'); saveNow(); renderAll();});
+$('#clean').addEventListener('click',()=>{if(!canAct())return; state.clean=clamp01(state.clean+22); state.happy=clamp01(state.happy+4);
+  speak('さっぱり〜🫧'); bump(); awardEventIf('CLEAN'); markActed('clean'); saveNow(); renderAll();});
+$('#play').addEventListener('click',()=>{if(!canAct())return; if(state.energy<=8){speak('つかれちゃった…ちょっとネンネしよ？');return;}
+  state.happy=clamp01(state.happy+14); state.energy=clamp01(state.energy-12); state.hunger=clamp01(state.hunger-6); state.water=clamp01(state.water-4);
+  speak('あそぶのだいすき！🎾'); bump(); pulseLock(SPR_DASH,350,SPR_RUN); awardEventIf('PLAY'); markActed('play'); saveNow(); renderAll();});
+$('#sleep').addEventListener('click',()=>{state.sleeping=!state.sleeping; speak(state.sleeping?'すやすや…おやすみ…💤':'おはよ〜😃'); saveNow(); renderAll();});
+$('#reset').addEventListener('click',()=>{if(!confirm('データを初期化しますか？'))return;
+  Object.assign(state,{hunger:100,water:100,clean:100,happy:100,energy:100,seconds:0,sleeping:false,bornAt:Date.now(),event:null,nextEventAt:Date.now()+45000,
+    unlocked:{ribbon:false,hat:false,bowtie:false,shades:false},outfitIndex:0,miniBest1:null,miniBest2:null,today:todayKey(),countsToday:{pet:0,water:0,feed:0,clean:0,play:0},actedToday:false,streakDays:1});
+  saveNow(); renderAll(); toastMsg('初期化したよ'); updateStatsModal();});
+
+/* 撫でスワイプ */
+let touchStart=null; const board=$('#board');
+board.addEventListener('touchstart',e=>{const t=e.touches[0]; touchStart={x:t.clientX,y:t.clientY};},{passive:true});
+board.addEventListener('touchmove',e=>{if(!touchStart)return; const t=e.touches[0]; const dx=t.clientX-touchStart.x, dy=t.clientY-touchStart.y;
+  if(Math.hypot(dx,dy)>60){ const br=bun.getBoundingClientRect(); const inside=(touchStart.x>br.left&&touchStart.x<br.right&&touchStart.y>br.top&&touchStart.y<br.bottom); if(inside){ doPet(t.clientX,t.clientY); touchStart=null; }}},{passive:true});
+function doPet(x,y){if(state.sleeping){speak('むにゃ…（あとでなでて〜）');return;} state.happy=clamp01(state.happy+10); state.energy=clamp01(state.energy-2);
+  speak('なでなで気持ちい〜💕'); bump(); hearts(x,y,5); pulseLock(SPR_JUMP,350,SPR_RUN); awardEventIf('PET'); markActed('pet'); saveNow(); renderAll();}
+function hearts(x,y,n=4){const rect=board.getBoundingClientRect(); for(let i=0;i<n;i++){const h=document.createElement('div'); h.className='petTrail'; h.textContent=i%2?'💖':'💗'; h.style.left=(x-rect.left+rand(-18,18))+'px'; h.style.top=(y-rect.top+rand(-12,12))+'px'; board.appendChild(h); setTimeout(()=>h.remove(),750);}}
+
+/* クリックでセリフ */
+board.addEventListener('click',(e)=>{if(e.target.closest('button'))return; const lines=['なでなでして〜(∩^o^)⊃','今日のにんじんは甘い？','お水ひとくち飲もうかな🚰','ごろごろ…すや…？','一緒にあそぼ！🎾']; speak(lines[Math.floor(rand(0,lines.length))]); bump();});
+
+/* イベント要求 */
+function maybeSpawnEvent(){if(state.event || Date.now()<state.nextEventAt) return; const types=['WATER','PET','PLAY','FEED','CLEAN']; const textMap={WATER:'お水ほしい',PET:'なでてほしい',PLAY:'あそびたい',FEED:'にんじん食べたい',CLEAN:'きれいにして'};
+  const type=types[Math.floor(rand(0,types.length))]; state.event={type,text:textMap[type],expiresAt:Date.now()+20000}; ['water','play','feed','clean'].forEach(id=>$('#'+id).classList.remove('hint')); if(type!=='PET') $('#'+type.toLowerCase()).classList.add('hint'); setTimeout(()=>['water','play','feed','clean'].forEach(id=>$('#'+id).classList.remove('hint')),20000); speak('📣『'+textMap[type]+'』');}
+
+/* ループ */
+let acc=0; function tick(){const now=Date.now(); const dt=(now-state.lastTick)/1000; state.lastTick=now; acc+=dt; while(acc>=0.5){applyDecay(0.5); state.seconds+=0.5; acc-=0.5;}
+  dailyRolloverIfNeeded(); if(!state.event) maybeSpawnEvent(); if(state.event && Date.now()>=state.event.expiresAt){state.event=null; state.nextEventAt=Date.now()+rand(45000,90000);} if(Math.floor(state.seconds)%20===0) saveNow(true); renderAll(); requestAnimationFrame(tick);}
+renderAll(); requestAnimationFrame(tick);
+
+/* 反射ミニゲーム（元のまま） */
+const m1={modal:$('#miniModal1'),msg:$('#miniMsg1'),board:$('#miniBoard1'),start:$('#miniStart1'),close:$('#miniClose1'),stat:$('#miniStat1'),state:'idle',timer:null,goAt:0};
+$('#miniBtn1').addEventListener('click',()=>{m1.modal.classList.add('show'); updateM1Stat();}); m1.close.addEventListener('click',()=>{m1.modal.classList.remove('show'); resetM1();});
+function updateM1Stat(){m1.stat.innerHTML=`直近: ${window._miniLast1 ?? '—'} ms / ベスト: ${state.miniBest1 ?? '—'}`;}
+function resetM1(){clearTimeout(m1.timer); m1.state='idle'; m1.msg.textContent='スタートで開始！';}
+m1.start.addEventListener('click',()=>{clearTimeout(m1.timer); m1.state='wait'; m1.msg.textContent='⏳ 待って…（タップ禁止）'; const delay=800+Math.random()*2400;
+  m1.timer=setTimeout(()=>{m1.state='go'; m1.goAt=performance.now(); m1.msg.textContent='🚀 いまだ！ タップ！';},delay);});
+m1.board.addEventListener('click',()=>{if(m1.state==='wait'){ m1.state='idle'; m1.msg.textContent='🙅‍♀️ フライング！'; return;}
+  if(m1.state==='go'){const ms=Math.round(performance.now()-m1.goAt); window._miniLast1=ms; state.miniBest1=state.miniBest1==null?ms:Math.min(state.miniBest1,ms);
+    const bonus=ms<=200?20: ms<=300?14: ms<=400?10:6; state.happy=clamp01(state.happy+bonus); flashWhite(); saveNow(); renderAll(); updateM1Stat(); m1.state='idle'; m1.msg.textContent='もう一回やる？';}});
+
+/* 避けミニゲーム（元のまま） */
+const m2={modal:$('#miniModal2'),msg:$('#miniMsg2'),start:$('#miniStart2'),close:$('#miniClose2'),stat:$('#miniStat2'),board:$('#miniBoard2'),canvas:$('#avoidCanvas'),running:false};
+let avCtx,avW,avH,avRAF,player,obs=[],score,touchX=null,lastSpawn=0,speed=2.2;
+function resizeCanvas(){const dpr=Math.max(1,window.devicePixelRatio||1); avW=m2.board.clientWidth; avH=m2.board.clientHeight; m2.canvas.width=Math.floor(avW*dpr); m2.canvas.height=Math.floor(avH*dpr); m2.canvas.style.width=avW+'px'; m2.canvas.style.height=avH+'px'; avCtx=m2.canvas.getContext('2d'); avCtx.scale(dpr,dpr); avCtx.imageSmoothingEnabled=false;}
+function resetAvoid(){resizeCanvas(); player={x:avW/2,y:avH*0.78,r:16}; obs=[]; score=0; lastSpawn=0; speed=2.2; touchX=null; m2.msg.style.display='block';}
+function spawnObstacle(){const w=24+Math.random()*36; obs.push({x:rand(w,avW-w), y:-30, w, h:14+Math.random()*22, vy:speed+Math.random()*1.5});}
+function stepAvoid(ts){if(!m2.running)return; avCtx.clearRect(0,0,avW,avH); avCtx.fillStyle='#0b1220'; avCtx.fillRect(0,0,avW,avH);
+  if(touchX!=null){player.x+=(touchX-player.x)*0.22;} player.x=Math.max(player.r,Math.min(avW-player.r,player.x));
+  if(SPR_RUN.ready){const a=SPR_RUN, cell=a.cell, f=Math.floor((Date.now()/(1000/a.fps)))%a.total; const sx=f*cell,sy=0,scale=1.2,dw=cell*scale,dh=cell*scale;
+    avCtx.drawImage(a.img,sx,sy,cell,cell, player.x-dw/2, player.y-dh/2, dw,dh);} else {avCtx.font='28px system-ui'; avCtx.textAlign='center'; avCtx.textBaseline='middle'; avCtx.fillText('🐰',player.x,player.y);}
+  if(ts-lastSpawn>650){spawnObstacle(); lastSpawn=ts; speed=Math.min(6.5,speed+0.05);}
+  avCtx.fillStyle='#1f2937'; for(const o of obs){o.y+=o.vy; avCtx.fillRect(o.x-o.w/2,o.y,o.w,o.h);}
+  for(const o of obs){const dx=Math.abs(player.x-o.x), dy=Math.abs(player.y-(o.y+o.h/2)); if(dx<(o.w/2+player.r*0.8) && dy<(o.h/2+player.r*0.8)){ endAvoid(false); return; }}
+  score+=1; avCtx.fillStyle='#cbd5e1'; avCtx.fillText('Score: '+score, avW/2, 22); avRAF=requestAnimationFrame(stepAvoid);}
+function endAvoid(manual=false){m2.running=false; cancelAnimationFrame(avRAF); const prev=state.miniBest2==null?0:state.miniBest2; if(score>prev) state.miniBest2=score;
+  let bonus=score>=600?20: score>=400?16: score>=250?12: score>=150?9: score>=80?6: 4; if(score<25) bonus=2; state.happy=clamp01(state.happy+bonus); flashWhite(); saveNow(); renderAll(); updateM2Stat();
+  m2.msg.style.display='block'; m2.msg.textContent=manual?'中断したよ':'当たっちゃった！もう一回？';}
+function updateM2Stat(){m2.stat.innerHTML=`スコア: ${score ?? '—'} / ベスト: ${state.miniBest2 ?? '—'}`;}
+$('#miniBtn2').addEventListener('click',()=>{m2.modal.classList.add('show'); resetAvoid(); updateM2Stat();});
+m2.close.addEventListener('click',()=>{if(m2.running) endAvoid(true); m2.modal.classList.remove('show');});
+m2.start.addEventListener('click',()=>{resetAvoid(); m2.msg.style.display='none'; m2.running=true; avRAF=requestAnimationFrame(stepAvoid);});
+m2.board.addEventListener('touchstart',e=>{const t=e.touches[0]; const r=m2.board.getBoundingClientRect(); touchX=t.clientX-r.left;},{passive:true});
+m2.board.addEventListener('touchmove',e=>{const t=e.touches[0]; const r=m2.board.getBoundingClientRect(); touchX=t.clientX-r.left;},{passive:true});
+m2.board.addEventListener('touchend',()=>{touchX=null;},{passive:true});
+window.addEventListener('resize',()=>{if(m2.modal.classList.contains('show')) resizeCanvas();});
+
+/* 統計 */
+const statsModal=$('#statsModal'), statsBtn=$('#statsBtn'), statsClose=$('#statsClose');
+const statPet=$('#statPet'), statWater=$('#statWater'), statFeed=$('#statFeed'), statClean=$('#statClean'), statPlay=$('#statPlay'), statStreak=$('#statStreak');
+function updateStatsModal(){statPet.textContent=state.countsToday.pet; statWater.textContent=state.countsToday.water; statFeed.textContent=state.countsToday.feed; statClean.textContent=state.countsToday.clean; statPlay.textContent=state.countsToday.play; statStreak.textContent=state.streakDays;}
+statsBtn.addEventListener('click',()=>{updateStatsModal(); statsModal.classList.add('show');}); statsClose.addEventListener('click',()=>statsModal.classList.remove('show'));
+
+/* Export / Import */
+$('#backupBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; const ts=new Date().toISOString().replace(/[:.]/g,'-'); a.download=`usagi-save-${ts}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),5000); toastMsg('JSONをダウンロードしたよ');});
+$('#restoreInput').addEventListener('change',async e=>{const file=e.target.files?.[0]; if(!file)return; try{const txt=await file.text(); const data=JSON.parse(txt);
+  const req=['hunger','water','clean','happy','energy','bornAt','today','countsToday','streakDays']; if(!req.every(k=>k in data)) throw 0;
+  Object.assign(state,data); saveNow(); renderAll(); updateStatsModal(); toastMsg('インポート完了！');}catch{toastMsg('インポート失敗…JSONを確認してね');}finally{e.target.value='';}});
+
+/* 通知（起動時） */
+const notifyBtn=$('#notifyBtn'); function canNotify(){return 'Notification' in window;}
+function requestNotify(){if(!canNotify())return; if(Notification.permission==='default'){Notification.requestPermission();}}
+notifyBtn.addEventListener('click',()=>{requestNotify(); setTimeout(showLaunchReminder,300);});
+function showLaunchReminder(){if(!canNotify())return; if(Notification.permission!=='granted')return; const now=Date.now(); if(now-state.lastNotifyAt<10000)return;
+  const low=[]; if(state.water<50)low.push('お水🚰'); if(state.hunger<50)low.push('ごはん🥕'); if(state.clean<40)low.push('おそうじ🧹'); if(state.energy<35)low.push('ねんね🛏️');
+  const body=low.length?`今は「${low.join('・')}」が必要かも！`:'今日もなでなでしてあげよ〜💖'; try{new Notification('おせわリマインド🐰',{body,icon:'icon-192.png',badge:'icon-192.png'}); state.lastNotifyAt=now; saveNow(true);}catch{}}
+setTimeout(showLaunchReminder,1200);
+
+/* A2HS */
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+const a2hs=$('#a2hs'); const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent) && !standalone){setTimeout(()=>a2hs.classList.add('show'),1200); setTimeout(()=>a2hs.classList.remove('show'),12000);}
+
+/* 初期配置（地面合わせ） */
+window.addEventListener('load', initWalk);
+window.addEventListener('resize', initWalk);
+</script>
+</body>
+</html>
